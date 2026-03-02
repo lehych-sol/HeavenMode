@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
 source /venv/main/bin/activate
-
 WORKSPACE=${WORKSPACE:-/workspace}
 COMFYUI_DIR="${WORKSPACE}/ComfyUI"
-
 echo "=== ComfyUI запуск ==="
 
-APT_PACKAGES=()
+APT_PACKAGES=(
+    git-lfs
+)
+
 PIP_PACKAGES=()
 
 NODES=(
@@ -65,17 +66,19 @@ DIFFUSION_MODELS=(
     "https://huggingface.co/T5B/Z-Image-Turbo-FP8/resolve/main/z-image-turbo-fp8-e4m3fn.safetensors"
 )
 
-BBOX_0=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/face_yolov8s.pt")
-BBOX_1=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/femaleBodyDetection_yolo26.pt")
-BBOX_2=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/female_breast-v4.2.pt")
-BBOX_3=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/nipples_yolov8s.pt")
-BBOX_4=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/vagina-v4.2.pt")
-BBOX_5=("https://huggingface.co/gazsuv/xmode/resolve/main/assdetailer.pt")
-BBOX_6=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyeful_v2-Paired.pt")
-BBOX_7=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyes.pt")
-BBOX_8=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/FacesV1.pt")
-BBOX_9=("https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/hand_yolov8s.pt")
-BBOX_10=("https://huggingface.co/AunyMoons/loras-pack/blob/main/foot-yolov8l.pt")
+BBOX_MODELS=(
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/face_yolov8s.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/femaleBodyDetection_yolo26.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/female_breast-v4.2.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/nipples_yolov8s.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/vagina-v4.2.pt"
+    "https://huggingface.co/gazsuv/xmode/resolve/main/assdetailer.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyeful_v2-Paired.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyes.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/FacesV1.pt"
+    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/hand_yolov8s.pt"
+    "https://huggingface.co/AunyMoons/loras-pack/resolve/main/foot-yolov8l.pt"
+)
 
 SAM_PTH=(
     "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/sams/sam_vit_b_01ec64.pth"
@@ -88,48 +91,30 @@ UPSCALER_MODELS=(
 # ─────────────── FUNCTIONS ───────────────
 
 function provisioning_start() {
-    echo ""
-    echo "##############################################"
-    echo "# Provisioning ComfyUI environment           #"
-    echo "##############################################"
-    echo ""
-
     provisioning_get_apt_packages
     provisioning_clone_comfyui
     provisioning_install_base_reqs
     provisioning_get_nodes
     provisioning_get_pip_packages
-
     provisioning_get_files "${COMFYUI_DIR}/models/clip" "${CLIP_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/text_encoders" "${TEXT_ENCODERS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/unet" "${UNET_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/vae" "${VAE_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ckpt" "${CKPT_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/model_patches" "${FUN_MODELS[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/checkpoints" "${CKPT_MODELS[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/controlnet" "${FUN_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/diffusion_models" "${DIFFUSION_MODELS[@]}"
-
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_0[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_1[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_2[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_3[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_4[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_5[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_6[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_7[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_8[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_9[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_10[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/sams" "${SAM_PTH[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/upscale_models" "${UPSCALER_MODELS[@]}"
 
-    echo ""
-    echo "Provisioning completed. Starting ComfyUI..."
-    echo ""
+    # ───── Qwen3-VL Prompt Generator ─────
+    provisioning_clone_hf_model \
+        "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal" \
+        "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal"
 }
 
 function provisioning_clone_comfyui() {
     if [[ ! -d "${COMFYUI_DIR}" ]]; then
-        echo "Cloning ComfyUI..."
         git clone https://github.com/comfyanonymous/ComfyUI.git "${COMFYUI_DIR}"
     fi
     cd "${COMFYUI_DIR}"
@@ -137,14 +122,14 @@ function provisioning_clone_comfyui() {
 
 function provisioning_install_base_reqs() {
     if [[ -f requirements.txt ]]; then
-        echo "Installing base requirements..."
         pip install --no-cache-dir -r requirements.txt
     fi
 }
 
 function provisioning_get_apt_packages() {
     if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
-        sudo apt update && sudo apt install -y "${APT_PACKAGES[@]}"
+        sudo apt-get update
+        sudo apt-get install -y "${APT_PACKAGES[@]}"
     fi
 }
 
@@ -157,40 +142,46 @@ function provisioning_get_pip_packages() {
 function provisioning_get_nodes() {
     mkdir -p "${COMFYUI_DIR}/custom_nodes"
     cd "${COMFYUI_DIR}/custom_nodes"
-
     for repo in "${NODES[@]}"; do
         dir="${repo##*/}"
         path="./${dir}"
-
-        if [[ -d "$path" ]]; then
-            (cd "$path" && git pull --ff-only 2>/dev/null || { git fetch && git reset --hard origin/main; })
+        if [[ -d "$path/.git" ]]; then
+            (cd "$path" && git pull --ff-only) || echo "WARN: не удалось обновить ${dir}, пропускаю"
         else
-            git clone "$repo" "$path" --recursive || echo "Clone failed: $repo"
+            git clone "$repo" "$path" --recursive
         fi
-
-        requirements="${path}/requirements.txt"
-        if [[ -f "$requirements" ]]; then
-            pip install --no-cache-dir -r "$requirements" || echo "pip requirements failed for $dir"
+        if [[ -f "$path/requirements.txt" ]]; then
+            pip install --no-cache-dir -r "$path/requirements.txt"
         fi
     done
 }
 
 function provisioning_get_files() {
-    if [[ $# -lt 2 ]]; then return; fi
     local dir="$1"
     shift
     local files=("$@")
-
     mkdir -p "$dir"
-
     for url in "${files[@]}"; do
-        local auth_header=""
-        if [[ -n "$HF_TOKEN" && "$url" =~ huggingface\.co ]]; then
-            auth_header="--header=Authorization: Bearer $HF_TOKEN"
+        local filename
+        filename=$(basename "${url%%\?*}")
+        if [[ ! -f "$dir/$filename" ]]; then
+            wget --content-disposition -P "$dir" "$url" || echo "WARN: не удалось скачать ${url}"
+        else
+            echo "Файл уже существует: $dir/$filename, пропускаю"
         fi
-
-        wget $auth_header -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo "Download failed: $url"
     done
+}
+
+function provisioning_clone_hf_model() {
+    local repo_url="$1"
+    local target_dir="$2"
+    mkdir -p "$(dirname "$target_dir")"
+    git lfs install
+    if [[ -d "$target_dir/.git" ]]; then
+        (cd "$target_dir" && git pull) || echo "WARN: не удалось обновить ${target_dir}"
+    else
+        git clone "$repo_url" "$target_dir"
+    fi
 }
 
 if [[ ! -f /.noprovisioning ]]; then
@@ -200,3 +191,4 @@ fi
 echo "=== Starting ComfyUI ==="
 cd "${COMFYUI_DIR}"
 python main.py --listen 0.0.0.0 --port 8188
+
